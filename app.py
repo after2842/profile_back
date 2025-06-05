@@ -98,7 +98,7 @@ def track_visit():
         db.session.commit()
 
         # Send email notification
-        send_visitor_notification_email(ip_address, user_agent, page_url)
+        #send_visitor_notification_email(ip_address, user_agent, page_url)
 
         return jsonify({"message": "Visit tracked successfully"}), 201
     except Exception as e:
