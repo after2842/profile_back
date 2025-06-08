@@ -125,11 +125,35 @@ def get_monthly_visitors():
     except Exception as e:
         app.logger.error(f"Error getting monthly visitor count: {e}")
         return jsonify({"error": "Could not retrieve visitor count"}), 500
+    
+@app.post("/api/notify-click")
+def notify_click():
+    data = request.get_json(silent=True) or {}
+    kind = data.get("link_kind", "unknown link")
+    page = data.get("page", "unknown page")
+    ua   = request.headers.get("User-Agent", "unknown UA")
+
+    try:
+        
+        subject  = f"🎉  [Portfolio] {kind} clicked"
+        body    = f"""
+                {kind} was clicked!\n 
+                page: {page}
+                ua: {ua}
+                """
+        msg = Message(subject=subject, recipients=[ADMIN_EMAIL], body=body)
+        mail.send(msg)
+
+    
+    except Exception as e:
+        # Catching generic Exception is broad, but useful for debugging mail errors
+        app.logger.error(f"Error sending visitor email via Gmail: {e}")
+        app.logger.error(f"Current Mail Config: SERVER={app.config['MAIL_SERVER']}, PORT={app.config['MAIL_PORT']}, USER={app.config['MAIL_USERNAME'] is not None}")
 
 # --- CORS Handling (remains important) ---
 @app.after_request
 def after_request(response):
-    frontend_url = os.environ.get('FRONTEND_URL', '*') # For dev; set specific domain in prod
+    frontend_url = os.environ.get('FRONTEND_URL', '*') 
     response.headers.add('Access-Control-Allow-Origin', frontend_url)
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
